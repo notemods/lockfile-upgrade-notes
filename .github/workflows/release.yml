@@ -1,0 +1,143 @@
+name: Release Obsidian plugin
+
+# Procedure H. The factory pushes the release commit to the default branch,
+# then a tag equal to the version (1.2.3, no "v"). This job builds main.js from
+# the committed source, attests it and publishes the release. Nobody clicks
+# Publish: the release is created published, never as a draft.
+# A tag like 1.2.3-beta.1 (pushed from the beta branch) becomes a prerelease
+# for BRAT testers and must not change manifest.json on the default branch.
+
+on:
+    push:
+        tags:
+            - '[0-9]+.[0-9]+.[0-9]+'
+            - '[0-9]+.[0-9]+.[0-9]+-*'
+
+permissions: {}
+
+concurrency:
+    group: release-${{ github.ref }}
+    cancel-in-progress: false
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        permissions:
+            contents: write
+            id-token: write
+            attestations: write
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                  fetch-depth: 0
+
+            - name: Use Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: 24
+                  cache: 'npm'
+
+            - name: Check tag against versions
+              id: tag
+              env:
+                  DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+              run: |
+                  set -euo pipefail
+                  tag="${GITHUB_REF#refs/tags/}"
+                  fail() { echo "::error::$*"; exit 1; }
+                  case "$tag" in v*) fail "tag $tag has a v prefix; Obsidian needs the bare version" ;; esac
+                  jv() { node -e 'const fs=require("fs");process.stdout.write(String(JSON.parse(fs.readFileSync(0,"utf8")).version))'; }
+                  manifest=$(jv < manifest.json)
+                  pkg=$(jv < package.json)
+                  [ "$tag" = "$manifest" ] || fail "tag $tag != manifest.json version $manifest"
+                  [ "$tag" = "$pkg" ] || fail "tag $tag != package.json version $pkg"
+                  git fetch --no-tags origin "$DEFAULT_BRANCH"
+                  head_version=$(git show "FETCH_HEAD:manifest.json" | jv)
+                  case "$tag" in
+                      *-*)
+                          echo "$tag" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+-[0-9A-Za-z.-]+$' || fail "prerelease tag $tag is not x.y.z-label.n"
+                          [ "$head_version" != "$tag" ] || fail "default-branch manifest.json carries the prerelease $tag"
+                          echo "$head_version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || fail "default-branch manifest.json version $head_version is not x.y.z"
+                          echo "prerelease=true" >> "$GITHUB_OUTPUT"
+                          ;;
+                      *)
+                          echo "$tag" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || fail "tag $tag is not x.y.z"
+                          node -e 'const v=require("./versions.json");const m=require("./manifest.json");if(v[process.argv[1]]!==m.minAppVersion)process.exit(1)' "$tag" || fail "versions.json lacks $tag"
+                          git merge-base --is-ancestor "$GITHUB_SHA" FETCH_HEAD || fail "tagged commit is not on $DEFAULT_BRANCH"
+                          [ "$head_version" = "$tag" ] || fail "default-branch manifest.json is $head_version; the directory would not ship $tag"
+                          echo "prerelease=false" >> "$GITHUB_OUTPUT"
+                          ;;
+                  esac
+                  echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+            - name: Build and test plugin
+              run: |
+                  set -euo pipefail
+                  npm ci
+                  npm run build
+                  npm run lint
+                  npm test
+
+            - name: Check the build is reproducible
+              run: |
+                  set -euo pipefail
+                  first=$(sha256sum main.js | cut -d' ' -f1)
+                  npm run build
+                  second=$(sha256sum main.js | cut -d' ' -f1)
+                  echo "main.js sha256 $first / $second"
+                  [ "$first" = "$second" ] || { echo "::error::main.js differs between two builds; directory build verification would fail"; exit 1; }
+
+            - name: Check for optional styles
+              id: styles
+              run: |
+                  [ -f styles.css ] && echo "exists=true" >> "$GITHUB_OUTPUT" || echo "exists=false" >> "$GITHUB_OUTPUT"
+
+            - name: Attest build provenance
+              uses: actions/attest@v4
+              with:
+                  subject-path: |
+                      main.js
+                      ${{ steps.styles.outputs.exists == 'true' && 'styles.css' || '' }}
+
+            - name: Write release notes
+              env:
+                  TAG: ${{ steps.tag.outputs.tag }}
+              run: |
+                  node -e '
+                  const fs = require("fs");
+                  const tag = process.env.TAG;
+                  const log = fs.existsSync("CHANGELOG.md") ? fs.readFileSync("CHANGELOG.md", "utf8") : "";
+                  const at = log.indexOf("\n## " + tag + "\n");
+                  let body = "Release " + tag + ".";
+                  if (at >= 0) { const rest = log.slice(at + 4 + tag.length); const end = rest.indexOf("\n## "); body = (end >= 0 ? rest.slice(0, end) : rest).trim(); }
+                  fs.writeFileSync("release-notes.md", body + "\n");
+                  '
+                  cat release-notes.md
+
+            - name: Create published release
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  TAG: ${{ steps.tag.outputs.tag }}
+                  PRERELEASE: ${{ steps.tag.outputs.prerelease }}
+                  HAS_STYLES: ${{ steps.styles.outputs.exists }}
+              run: |
+                  set -euo pipefail
+                  assets=(main.js manifest.json)
+                  [ "$HAS_STYLES" = true ] && assets+=(styles.css)
+                  flags=(--verify-tag --title "$TAG" --notes-file release-notes.md)
+                  [ "$PRERELEASE" = true ] && flags+=(--prerelease --latest=false)
+                  gh release create "$TAG" "${flags[@]}" "${assets[@]}"
+
+            - name: Verify the release is public
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  TAG: ${{ steps.tag.outputs.tag }}
+              run: |
+                  set -euo pipefail
+                  state=$(gh release view "$TAG" --json isDraft,isPrerelease --jq '"draft=\(.isDraft) prerelease=\(.isPrerelease)"')
+                  echo "$TAG $state"
+                  case "$state" in draft=false*) ;; *) echo "::error::release $TAG is a draft"; exit 1 ;; esac
+                  code=$(curl -s -o /dev/null -w '%{http_code}' "https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/main.js")
+                  echo "main.js download HTTP $code"
+                  [ "$code" = 302 ] || { echo "::error::main.js download returned $code"; exit 1; }

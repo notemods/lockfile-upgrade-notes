@@ -1,0 +1,11 @@
+{
+	"id": "lockfile-upgrade-notes",
+	"name": "Lockfile Upgrade Notes",
+	"version": "1.0.0",
+	"minAppVersion": "1.13.4",
+	"description": "Compare two npm lockfiles and save a note with package additions, removals, and version changes.",
+	"author": "Michael Lip",
+	"authorUrl": "https://github.com/theluckystrike",
+	"fundingUrl": "https://github.com/sponsors/theluckystrike",
+	"isDesktopOnly": false
+}

@@ -1,0 +1,803 @@
+{
+  "slug": "lockfile-upgrade-notes",
+  "module": "products/lockfile-upgrade-notes/src/compare.ts",
+  "function": "compareSources",
+  "cases": [
+    {
+      "name": "01 direct patch",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{\"dependencies\":{\"a\":\"^1\"}},\"node_modules/a\":{\"version\":\"1.0.0\"}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{\"dependencies\":{\"a\":\"^1\"}},\"node_modules/a\":{\"version\":\"1.0.1\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/a",
+              "name": "a",
+              "status": "changed",
+              "oldVersion": "1.0.0",
+              "newVersion": "1.0.1",
+              "direct": true,
+              "label": "patch",
+              "downgrade": false,
+              "reason": ""
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "02 added and removed",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/c\":{\"version\":\"2.0.0\"}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/b\":{\"version\":\"1.0.0\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/b",
+              "name": "b",
+              "status": "added",
+              "oldVersion": null,
+              "newVersion": "1.0.0",
+              "direct": false,
+              "label": null,
+              "downgrade": false,
+              "reason": ""
+            },
+            {
+              "path": "node_modules/c",
+              "name": "c",
+              "status": "removed",
+              "oldVersion": "2.0.0",
+              "newVersion": null,
+              "direct": false,
+              "label": null,
+              "downgrade": false,
+              "reason": ""
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "03 integrity and resolved only",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.0.0\",\"integrity\":\"old\",\"resolved\":\"old\"}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.0.0\",\"integrity\":\"new\",\"resolved\":\"new\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [],
+          "unchanged": 1,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "04 separate nested paths",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{\"dependencies\":{\"a\":\"*\"}},\"node_modules/a\":{\"version\":\"1.0.0\"},\"node_modules/b/node_modules/a\":{\"version\":\"1.0.0\"}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"2.0.0\"},\"node_modules/b/node_modules/a\":{\"version\":\"1.1.0\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/a",
+              "name": "a",
+              "status": "changed",
+              "oldVersion": "1.0.0",
+              "newVersion": "2.0.0",
+              "direct": true,
+              "label": "major",
+              "downgrade": false,
+              "reason": ""
+            },
+            {
+              "path": "node_modules/b/node_modules/a",
+              "name": "a",
+              "status": "changed",
+              "oldVersion": "1.0.0",
+              "newVersion": "1.1.0",
+              "direct": false,
+              "label": "minor",
+              "downgrade": false,
+              "reason": ""
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "05 scoped package",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/@scope/name\":{\"version\":\"1.0.0\"}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{\"dependencies\":{\"@scope/name\":\"*\"}},\"node_modules/@scope/name\":{\"version\":\"1.0.1\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/@scope/name",
+              "name": "@scope/name",
+              "status": "changed",
+              "oldVersion": "1.0.0",
+              "newVersion": "1.0.1",
+              "direct": true,
+              "label": "patch",
+              "downgrade": false,
+              "reason": ""
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "06 lock v2 to v3",
+      "args": [
+        "{\"lockfileVersion\":2,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.0.0\"}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.1.0\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/a",
+              "name": "a",
+              "status": "changed",
+              "oldVersion": "1.0.0",
+              "newVersion": "1.1.0",
+              "direct": false,
+              "label": "minor",
+              "downgrade": false,
+              "reason": ""
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 2,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "07 version 1",
+      "args": [
+        "{\"lockfileVersion\": 1, \"dependencies\": {}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{}}}"
+      ],
+      "expected": {
+        "ok": false,
+        "error": "Unsupported format: use npm lockfile version 2 or 3."
+      }
+    },
+    {
+      "name": "07 malformed JSON",
+      "args": [
+        "{broken",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{}}}"
+      ],
+      "expected": {
+        "ok": false,
+        "error": "Parse error: input is not valid JSON."
+      }
+    },
+    {
+      "name": "07 missing packages",
+      "args": [
+        "{\"lockfileVersion\": 3}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{}}}"
+      ],
+      "expected": {
+        "ok": false,
+        "error": "Unsupported format: packages must be an object."
+      }
+    },
+    {
+      "name": "08 link unchanged version is unsupported",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.0.0\",\"link\":true}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.0.0\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/a",
+              "name": "a",
+              "status": "unsupported",
+              "oldVersion": "1.0.0",
+              "newVersion": "1.0.0",
+              "direct": false,
+              "label": null,
+              "downgrade": false,
+              "reason": "Old entry is a link"
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "08 missing versions in both maps",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/a",
+              "name": "a",
+              "status": "unsupported",
+              "oldVersion": null,
+              "newVersion": null,
+              "direct": false,
+              "label": null,
+              "downgrade": false,
+              "reason": "Old entry has no version; New entry has no version"
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "09 major downgrade",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"2.3.4\"}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.9.0\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/a",
+              "name": "a",
+              "status": "changed",
+              "oldVersion": "2.3.4",
+              "newVersion": "1.9.0",
+              "direct": false,
+              "label": "major",
+              "downgrade": true,
+              "reason": ""
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "09 prerelease other",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.0.0-beta.1\"}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.0.0-beta.2\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/a",
+              "name": "a",
+              "status": "changed",
+              "oldVersion": "1.0.0-beta.1",
+              "newVersion": "1.0.0-beta.2",
+              "direct": false,
+              "label": "other",
+              "downgrade": false,
+              "reason": ""
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "10 local comparison with source data",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.0.0\"}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.0.1\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/a",
+              "name": "a",
+              "status": "changed",
+              "oldVersion": "1.0.0",
+              "newVersion": "1.0.1",
+              "direct": false,
+              "label": "patch",
+              "downgrade": false,
+              "reason": ""
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      },
+      "vault_case": {
+        "oldPath": "old/package-lock.json",
+        "newPath": "new/package-lock.json",
+        "existingReports": [
+          "Lockfile upgrade report.md",
+          "Lockfile upgrade report 2.md"
+        ],
+        "expectedPath": "Lockfile upgrade report 3.md",
+        "expectedText": [
+          "This report compares package versions only.",
+          "[old/package-lock.json]",
+          "[new/package-lock.json]"
+        ],
+        "networkDisabled": true,
+        "sourcesUnchanged": true
+      }
+    },
+    {
+      "name": "minor upgrade",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.0.9\"}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.2.0\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/a",
+              "name": "a",
+              "status": "changed",
+              "oldVersion": "1.0.9",
+              "newVersion": "1.2.0",
+              "direct": false,
+              "label": "minor",
+              "downgrade": false,
+              "reason": ""
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "minor downgrade",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.2.0\"}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.1.9\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/a",
+              "name": "a",
+              "status": "changed",
+              "oldVersion": "1.2.0",
+              "newVersion": "1.1.9",
+              "direct": false,
+              "label": "minor",
+              "downgrade": true,
+              "reason": ""
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "patch downgrade",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.2.3\"}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.2.2\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/a",
+              "name": "a",
+              "status": "changed",
+              "oldVersion": "1.2.3",
+              "newVersion": "1.2.2",
+              "direct": false,
+              "label": "patch",
+              "downgrade": true,
+              "reason": ""
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "build metadata uses other",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.0.0+old\"}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.0.0+new\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/a",
+              "name": "a",
+              "status": "changed",
+              "oldVersion": "1.0.0+old",
+              "newVersion": "1.0.0+new",
+              "direct": false,
+              "label": "other",
+              "downgrade": false,
+              "reason": ""
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "non numeric version uses other",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"git:abc\"}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"git:def\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/a",
+              "name": "a",
+              "status": "changed",
+              "oldVersion": "git:abc",
+              "newVersion": "git:def",
+              "direct": false,
+              "label": "other",
+              "downgrade": false,
+              "reason": ""
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "root changes are not package changes",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{\"name\":\"old\",\"version\":\"1.0.0\"}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{\"name\":\"new\",\"version\":\"2.0.0\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "direct devDependencies",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.0.0\"}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{\"devDependencies\":{\"a\":\"*\"}},\"node_modules/a\":{\"version\":\"1.0.1\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/a",
+              "name": "a",
+              "status": "changed",
+              "oldVersion": "1.0.0",
+              "newVersion": "1.0.1",
+              "direct": true,
+              "label": "patch",
+              "downgrade": false,
+              "reason": ""
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "direct optionalDependencies",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.0.0\"}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{\"optionalDependencies\":{\"a\":\"*\"}},\"node_modules/a\":{\"version\":\"1.0.1\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/a",
+              "name": "a",
+              "status": "changed",
+              "oldVersion": "1.0.0",
+              "newVersion": "1.0.1",
+              "direct": true,
+              "label": "patch",
+              "downgrade": false,
+              "reason": ""
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "direct peerDependencies",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.0.0\"}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{\"peerDependencies\":{\"a\":\"*\"}},\"node_modules/a\":{\"version\":\"1.0.1\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/a",
+              "name": "a",
+              "status": "changed",
+              "oldVersion": "1.0.0",
+              "newVersion": "1.0.1",
+              "direct": true,
+              "label": "patch",
+              "downgrade": false,
+              "reason": ""
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "new link with absent old entry",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"link\":true}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/a",
+              "name": "a",
+              "status": "unsupported",
+              "oldVersion": null,
+              "newVersion": null,
+              "direct": false,
+              "label": null,
+              "downgrade": false,
+              "reason": "New entry is a link"
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "removed missing version",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/a",
+              "name": "a",
+              "status": "unsupported",
+              "oldVersion": null,
+              "newVersion": null,
+              "direct": false,
+              "label": null,
+              "downgrade": false,
+              "reason": "Old entry has no version"
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "malformed entry is incomplete",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":null}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.0.0\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/a",
+              "name": "a",
+              "status": "unsupported",
+              "oldVersion": null,
+              "newVersion": "1.0.0",
+              "direct": false,
+              "label": null,
+              "downgrade": false,
+              "reason": "Old entry has no version"
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "packages array is invalid",
+      "args": [
+        "{\"lockfileVersion\": 3, \"packages\": []}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{}}}"
+      ],
+      "expected": {
+        "ok": false,
+        "error": "Unsupported format: packages must be an object."
+      }
+    },
+    {
+      "name": "stable package path order",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/c\":{\"version\":\"3.0.0\"},\"node_modules/b\":{\"version\":\"2.0.0\"},\"node_modules/a\":{\"version\":\"1.0.0\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/a",
+              "name": "a",
+              "status": "added",
+              "oldVersion": null,
+              "newVersion": "1.0.0",
+              "direct": false,
+              "label": null,
+              "downgrade": false,
+              "reason": ""
+            },
+            {
+              "path": "node_modules/b",
+              "name": "b",
+              "status": "added",
+              "oldVersion": null,
+              "newVersion": "2.0.0",
+              "direct": false,
+              "label": null,
+              "downgrade": false,
+              "reason": ""
+            },
+            {
+              "path": "node_modules/c",
+              "name": "c",
+              "status": "added",
+              "oldVersion": null,
+              "newVersion": "3.0.0",
+              "direct": false,
+              "label": null,
+              "downgrade": false,
+              "reason": ""
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "nested scoped package",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/b/node_modules/@scope/name\":{\"version\":\"1.0.0\"}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{\"dependencies\":{\"@scope/name\":\"*\"}},\"node_modules/b/node_modules/@scope/name\":{\"version\":\"2.0.0\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [
+            {
+              "path": "node_modules/b/node_modules/@scope/name",
+              "name": "@scope/name",
+              "status": "changed",
+              "oldVersion": "1.0.0",
+              "newVersion": "2.0.0",
+              "direct": false,
+              "label": "major",
+              "downgrade": false,
+              "reason": ""
+            }
+          ],
+          "unchanged": 0,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    },
+    {
+      "name": "equal prerelease is unchanged",
+      "args": [
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.0.0-beta.1\"}}}",
+        "{\"lockfileVersion\":3,\"packages\":{\"\":{},\"node_modules/a\":{\"version\":\"1.0.0-beta.1\"}}}"
+      ],
+      "expected": {
+        "ok": true,
+        "comparison": {
+          "rows": [],
+          "unchanged": 1,
+          "oldFormat": 3,
+          "newFormat": 3
+        }
+      }
+    }
+  ]
+}

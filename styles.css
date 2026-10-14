@@ -1,0 +1,59 @@
+.lun-modal {
+	max-width: 100%;
+}
+
+.lun-modal select {
+	max-width: 22em;
+}
+
+.lun-summary {
+	font-weight: var(--font-semibold);
+	color: var(--text-accent);
+}
+
+.lun-hint,
+.lun-path {
+	color: var(--text-muted);
+	font-size: var(--font-smaller);
+}
+
+.lun-direct {
+	margin-left: var(--size-4-1);
+	color: var(--text-accent);
+	font-size: var(--font-smaller);
+}
+
+.lun-error {
+	color: var(--text-error);
+}
+
+.lun-table-wrap {
+	max-height: 22em;
+	overflow: auto;
+	margin-bottom: var(--size-4-4);
+}
+
+.lun-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.lun-table th,
+.lun-table td {
+	padding: var(--size-4-2);
+	border-bottom: 1px solid var(--background-modifier-border);
+	text-align: left;
+	vertical-align: top;
+	overflow-wrap: anywhere;
+}
+
+.lun-dialog {
+	width: min(1000px, 92vw);
+}
+
+.lun-table th:not(:first-child),
+.lun-table td:nth-child(2),
+.lun-table td:nth-child(3),
+.lun-table td:nth-child(4) {
+	white-space: nowrap;
+}

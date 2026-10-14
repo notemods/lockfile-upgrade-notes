@@ -1,0 +1,79 @@
+[
+  {
+    "feature": "choose-files",
+    "caption": "Choose old and new Atlas lockfiles in the vault.",
+    "note": "Welcome.md",
+    "eval": "(async()=>{const p=app.plugins.plugins['lockfile-upgrade-notes']; window.__lunModal?.close(); p.pro.signOut(); const m=p.openCompare('Lockfile Upgrade Notes/Old/package-lock.json','Lockfile Upgrade Notes/New/package-lock.json'); window.__lunModal=m; return 'ok';})()",
+    "zoom": 0.85,
+    "wait": 800,
+    "after": "window.__lunModal?.close(); app.plugins.plugins['lockfile-upgrade-notes'].pro.signOut(); 'ok'"
+  },
+  {
+    "feature": "version-changes",
+    "caption": "Compare the Atlas package versions with numeric labels.",
+    "note": "Welcome.md",
+    "eval": "(async()=>{const p=app.plugins.plugins['lockfile-upgrade-notes']; window.__lunModal?.close(); p.pro.signOut(); const m=p.openCompare('Lockfile Upgrade Notes/Old/package-lock.json','Lockfile Upgrade Notes/New/package-lock.json'); window.__lunModal=m; await m.previewFiles(); if(m.preview.comparison.rows.length!==10) throw new Error('Wrong sample');return 'ok';})()",
+    "zoom": 0.85,
+    "wait": 800,
+    "after": "window.__lunModal?.close(); app.plugins.plugins['lockfile-upgrade-notes'].pro.signOut(); 'ok'"
+  },
+  {
+    "feature": "installation-paths",
+    "caption": "Keep nested installations and incomplete entries as separate rows.",
+    "note": "Welcome.md",
+    "eval": "(async()=>{const p=app.plugins.plugins['lockfile-upgrade-notes']; window.__lunModal?.close(); p.pro.signOut(); const m=p.openCompare('Lockfile Upgrade Notes/Old/package-lock.json','Lockfile Upgrade Notes/New/package-lock.json'); window.__lunModal=m; await m.previewFiles(); const w=m.contentEl.querySelector('.lun-table-wrap'); w.scrollTop=w.scrollHeight;return 'ok';})()",
+    "zoom": 0.85,
+    "wait": 800,
+    "after": "window.__lunModal?.close(); app.plugins.plugins['lockfile-upgrade-notes'].pro.signOut(); 'ok'"
+  },
+  {
+    "feature": "markdown-report",
+    "caption": "Open the saved Atlas report with both source links.",
+    "note": "Welcome.md",
+    "eval": "(async()=>{const p=app.plugins.plugins['lockfile-upgrade-notes']; window.__lunModal?.close(); p.pro.signOut(); app.vault.setConfig('readableLineLength',false); p.settings.reportName='Atlas upgrade review'; const f=await p.createReport(await p.compare('Lockfile Upgrade Notes/Old/package-lock.json','Lockfile Upgrade Notes/New/package-lock.json')); await p.openReport(f); await app.workspace.getMostRecentLeaf().setViewState({type:'markdown',state:{file:f.path,mode:'preview'}});return 'ok';})()",
+    "zoom": 0.85,
+    "wait": 800,
+    "after": "window.__lunModal?.close(); app.plugins.plugins['lockfile-upgrade-notes'].pro.signOut(); 'ok'"
+  },
+  {
+    "feature": "saved-pairs",
+    "caption": "Save a named Atlas file pair with Pro.",
+    "note": "Welcome.md",
+    "eval": "(async()=>{const p=app.plugins.plugins['lockfile-upgrade-notes']; window.__lunModal?.close(); p.pro.signOut(); p.pro.opts.http=async()=>({status:200,json:{data:{viewer:{login:'demo-reader'},user:{sponsorshipForViewerAsSponsor:{isActive:true,isOneTimePayment:false,tier:{name:'$5 a month',monthlyPriceInCents:500}}}}}}); app.secretStorage.setSecret('lockfile-upgrade-notes-github-token','gho_'+'0'.repeat(36)); await p.pro.refreshNow(); await p.savePair('Atlas dashboard','Lockfile Upgrade Notes/Old/package-lock.json','Lockfile Upgrade Notes/New/package-lock.json'); const m=p.openCompare('Lockfile Upgrade Notes/Old/package-lock.json','Lockfile Upgrade Notes/New/package-lock.json'); window.__lunModal=m; m.pairName='Atlas dashboard'; m.project='Atlas dashboard'; m.render(); m.contentEl.scrollTop=m.contentEl.scrollHeight;return 'ok';})()",
+    "zoom": 0.85,
+    "wait": 800,
+    "after": "window.__lunModal?.close(); app.plugins.plugins['lockfile-upgrade-notes'].pro.signOut(); 'ok'"
+  },
+  {
+    "feature": "project-baseline",
+    "caption": "Compare the new file with a local Atlas baseline with Pro.",
+    "note": "Welcome.md",
+    "eval": "(async()=>{const p=app.plugins.plugins['lockfile-upgrade-notes']; window.__lunModal?.close(); p.pro.signOut(); p.pro.opts.http=async()=>({status:200,json:{data:{viewer:{login:'demo-reader'},user:{sponsorshipForViewerAsSponsor:{isActive:true,isOneTimePayment:false,tier:{name:'$5 a month',monthlyPriceInCents:500}}}}}}); app.secretStorage.setSecret('lockfile-upgrade-notes-github-token','gho_'+'0'.repeat(36)); await p.pro.refreshNow(); await p.saveBaseline('Atlas dashboard','Lockfile Upgrade Notes/Old/package-lock.json'); const m=p.openCompare('Lockfile Upgrade Notes/Old/package-lock.json','Lockfile Upgrade Notes/New/package-lock.json'); window.__lunModal=m; m.baselineName='Atlas dashboard'; m.project='Atlas dashboard'; m.preview=await p.compareBaseline('Atlas dashboard',m.newPath); m.render(); m.contentEl.querySelector('.lun-summary').scrollIntoView({block:'start'});return 'ok';})()",
+    "zoom": 0.85,
+    "wait": 800,
+    "after": "window.__lunModal?.close(); app.plugins.plugins['lockfile-upgrade-notes'].pro.signOut(); 'ok'"
+  },
+  {
+    "feature": "lockfile-upgrade-notes",
+    "caption": "Choose two vault files, compare package versions and save a report.",
+    "frames": [
+      {
+        "note": "Welcome.md",
+        "eval": "(async()=>{const p=app.plugins.plugins['lockfile-upgrade-notes']; window.__lunModal?.close(); p.pro.signOut(); const m=p.openCompare('Lockfile Upgrade Notes/Old/package-lock.json','Lockfile Upgrade Notes/New/package-lock.json'); window.__lunModal=m; return 'ok';})()",
+        "zoom": 0.85,
+        "hold": 1400
+      },
+      {
+        "eval": "(async()=>{const p=app.plugins.plugins['lockfile-upgrade-notes']; window.__lunModal?.close(); p.pro.signOut(); const m=p.openCompare('Lockfile Upgrade Notes/Old/package-lock.json','Lockfile Upgrade Notes/New/package-lock.json'); window.__lunModal=m; await m.previewFiles(); if(m.preview.comparison.rows.length!==10) throw new Error('Wrong sample');return 'ok';})()",
+        "zoom": 0.85,
+        "hold": 1800
+      },
+      {
+        "eval": "(async()=>{const p=app.plugins.plugins['lockfile-upgrade-notes']; window.__lunModal?.close(); p.pro.signOut(); app.vault.setConfig('readableLineLength',false); p.settings.reportName='Atlas upgrade review'; const f=await p.createReport(await p.compare('Lockfile Upgrade Notes/Old/package-lock.json','Lockfile Upgrade Notes/New/package-lock.json')); await p.openReport(f); await app.workspace.getMostRecentLeaf().setViewState({type:'markdown',state:{file:f.path,mode:'preview'}});return 'ok';})()",
+        "zoom": 0.85,
+        "hold": 2000
+      }
+    ],
+    "after": "window.__lunModal?.close(); app.plugins.plugins['lockfile-upgrade-notes'].pro.signOut(); 'ok'"
+  }
+]
