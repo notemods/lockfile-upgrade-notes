@@ -37,6 +37,8 @@ export interface SponsorsConfig {
 	oneTimeMonths: number;
 	/** OAuth scope for the token. Default read:user. */
 	scope?: string;
+	/** Value of metadata_source in the Sponsor URL, so a payment shows where it came from. createGitHubSponsors sets the plugin id. */
+	source?: string;
 }
 
 const CLIENT_ID_RE = /^(?:Ov2[0-9][A-Za-z0-9]{16}|Iv[0-9]+\.[0-9a-f]{16}|[0-9a-f]{20})$/;
@@ -51,8 +53,15 @@ export function isWellFormedToken(token: string): boolean {
 	return TOKEN_RE.test(token);
 }
 
+/**
+ * The Sponsors profile URL. With cfg.source it adds metadata_source, which GitHub puts in the metadata column of the
+ * transaction export. GitHub accepts only letters, digits, dashes and underscores, at most 100 characters per value,
+ * and answers 404 for other characters (docs.github.com/en/sponsors, "Viewing your sponsors and sponsorships").
+ */
 export function sponsorUrl(cfg: SponsorsConfig): string {
-	return `https://github.com/sponsors/${cfg.sponsorLogin}`;
+	const base = `https://github.com/sponsors/${cfg.sponsorLogin}`;
+	const source = (cfg.source ?? '').replace(/[^A-Za-z0-9_-]/g, '-').slice(0, 100);
+	return /[A-Za-z0-9]/.test(source) ? `${base}?metadata_source=${source}` : base;
 }
 
 // ---------- device flow ----------

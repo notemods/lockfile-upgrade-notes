@@ -36,7 +36,7 @@ Reports go in the vault root. If the report name exists, the plugin adds a numbe
 
 ### Named file pairs (Pro)
 
-Enter a project name and select "Save pair (Pro)". Select that name under "Named pair (Pro)", then "Load pair (Pro)" to fill the old and new selectors. A pair stores paths rather than file contents. It reads the current files when you compare. Saving the same name replaces that pair. You can keep up to 20 pairs.
+Enter a project name and select "Save pair (Pro)". Select that name under "Named pair (Pro)", then "Load pair (Pro)" to fill the old and new selectors. A pair stores paths rather than file contents. It reads the current files when you compare. Saving the same name replaces that pair. You can keep up to 20 pairs. Without Pro, the Pro buttons show a notice with a Sponsor on GitHub button and save nothing.
 
 <img src="https://raw.githubusercontent.com/theluckystrike/lockfile-upgrade-notes/HEAD/docs/saved-pairs.png" alt="Atlas named pair saved in the local project controls" width="720">
 
@@ -62,6 +62,8 @@ For manual installation, create `<vault>/.obsidian/plugins/lockfile-upgrade-note
 Inputs are limited to 2 MiB each and 10,000 package-map entries each, including the root entry. A larger input produces an error. Reduce the input outside the plugin if it exceeds those limits. The root package version is not treated as an installed dependency.
 
 ## Settings
+
+After a minor or major update, this plugin opens one What's new tab in the background. The tab and settings card suggest other NoteMods plugins and Zovo Chat and link to notemods.com for feedback ([privacy](https://notemods.com/privacy/)). The tab sends no data. Turn the tab off in Settings.
 
 "Report name" sets the title used for reports in the vault root. Its default is Lockfile upgrade report. Characters that would form a folder path or interfere with a note link are removed from this title.
 

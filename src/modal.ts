@@ -2,7 +2,7 @@ import { Modal, Setting, type ButtonComponent } from 'obsidian';
 import { VERSION_ONLY, type ChangeRow } from './compare';
 import type LockfileUpgradeNotesPlugin from './main';
 import type { Preview } from './main';
-import { isPro, onProChange } from './pro';
+import { isPro, onProChange, proText } from './pro';
 
 /** Keep the product tier name in the required heading suffix. */
 function proHeading(title: string): string { return `${title} (Pro)`; }
@@ -98,7 +98,7 @@ export class CompareModal extends Modal {
 	}
 	private renderPro(el: HTMLElement): void {
 		new Setting(el).setName(proHeading('Saved projects')).setHeading();
-		el.createEl('p', { text: isPro() ? 'Pro is active. Save up to 20 pairs and 10 local baselines.' : 'Pro adds named pairs and local baselines. Sponsor $5 a month or $15 once, then sign in with GitHub in the plugin settings.', cls: 'lun-hint' });
+		el.createEl('p', { text: isPro() ? 'Pro is active. Save up to 20 pairs and 10 local baselines.' : proText('Pro adds named pairs and local baselines.'), cls: 'lun-hint' });
 		new Setting(el).setName('Project name').addText((t) => t.setValue(this.project).setDisabled(this.busy).onChange((v) => { this.project = v; }));
 		const save = new Setting(el).setName('Save project');
 		this.button(save, 'Save pair (Pro)', async () => { await this.plugin.savePair(this.project, this.oldPath, this.newPath); this.pairName = this.project.trim().slice(0, 80); }, !!this.oldPath && !!this.newPath);

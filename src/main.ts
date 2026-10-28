@@ -3,8 +3,14 @@ import type { SponsorsManager } from './license/index';
 import { createGitHubSponsors } from './license/github-obsidian';
 import { compareLocks, parseLock, renderReport, snapshot, MAX_BYTES, type Comparison, type LockData } from './compare';
 import { CompareModal } from './modal';
-import { SPONSORS, bindPro, isPro, resetPro } from './pro';
+import { SPONSORS, bindPro, isPro, resetPro, proNotice, proText } from './pro';
+
+const PRO_LEAD = 'Named pairs and project baselines are Pro features.';
+/** A Pro action of a free user. The shared Pro notice is already shown, so notice() shows no second notice. */
+class ProNeeded extends Error {}
 import { DEFAULT_SETTINGS, LockfileUpgradeNotesSettingTab, MAX_BASELINES, MAX_PAIRS, normalizeSettings, safeReportName, type Baseline, type LockfileUpgradeNotesSettings, type SavedPair } from './settings';
+import { setupHello } from './hello/index';
+import WHATS_NEW from './whats-new.json';
 
 export interface Preview { comparison: Comparison; oldPath: string; newPath: string; baseline?: Baseline }
 
@@ -18,6 +24,8 @@ export default class LockfileUpgradeNotesPlugin extends Plugin {
 	private settingsWrites: Promise<void> = Promise.resolve();
 
 	async onload(): Promise<void> {
+		// First: "What's new" reads its state before the settings load (packages/hello). It does not wait.
+		setupHello(this, WHATS_NEW);
 		this.unloaded = false;
 		await this.loadSettings();
 		if (this.unloaded) return;
@@ -89,7 +97,7 @@ export default class LockfileUpgradeNotesPlugin extends Plugin {
 		throw new Error('Report names 1 to 1000 are in use. Change the report name.');
 	}
 	async openReport(file: TFile): Promise<void> { await this.app.workspace.openLinkText(file.path, '', false); }
-	private requirePro(): void { if (!isPro()) throw new Error('This is a Pro feature. Sponsor on GitHub, then sign in from the plugin settings.'); }
+	private requirePro(): void { if (!isPro()) { proNotice(PRO_LEAD); throw new ProNeeded(proText(PRO_LEAD)); } }
 	private projectName(name: string): string { const result = name.trim().slice(0, 80); if (!result) throw new Error('Enter a project name.'); return result; }
 
 	async savePair(name: string, oldPath: string, newPath: string): Promise<void> {
@@ -124,5 +132,5 @@ export default class LockfileUpgradeNotesPlugin extends Plugin {
 	async removeSaved(kind: 'pair' | 'baseline', name: string): Promise<void> {
 		await this.updateSettings((settings) => ({ ...settings, pairs: kind === 'pair' ? settings.pairs.filter((p) => p.name !== name) : settings.pairs, baselines: kind === 'baseline' ? settings.baselines.filter((b) => b.name !== name) : settings.baselines }));
 	}
-	notice(error: unknown): void { new Notice(error instanceof Error ? error.message : String(error)); }
+	notice(error: unknown): void { if (error instanceof ProNeeded) return; new Notice(error instanceof Error ? error.message : String(error)); }
 }

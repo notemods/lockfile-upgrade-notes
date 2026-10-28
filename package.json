@@ -1,7 +1,6 @@
 {
 	"name": "lockfile-upgrade-notes",
-	"repository": {"type": "git", "url": "theluckystrike/lockfile-upgrade-notes.git"},
-	"version": "1.0.0",
+	"version": "1.0.3",
 	"private": true,
 	"description": "Compare two npm lockfiles and save a note with package additions, removals, and version changes.",
 	"main": "main.js",

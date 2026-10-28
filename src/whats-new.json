@@ -1,0 +1,27 @@
+{
+	"id": "lockfile-upgrade-notes",
+	"name": "Lockfile Upgrade Notes",
+	"version": "1.0.3",
+	"changes": [
+		"The Pro buttons, such as Save pair (Pro), now show free users a notice with a Sponsor on GitHub button."
+	],
+	"tip": "Look for a downgrade note when a package version decreases between two lockfiles.",
+	"thanks": "Hi, I am Michael, a solo developer in Poland. Lockfile Upgrade Notes is one of over 100 small plugins that I make. Thank you for using it.",
+	"related": [
+		{
+			"id": "conventional-commit-draft",
+			"name": "Conventional Commit Draft",
+			"blurb": "Group selected conventional commit subjects into a new release draft."
+		},
+		{
+			"id": "junit-failure-notes",
+			"name": "JUnit Failure Notes",
+			"blurb": "Convert a local JUnit XML report into a note with test counts and folded failure logs."
+		},
+		{
+			"id": "json-payload-delta",
+			"name": "JSON Payload Delta",
+			"blurb": "Compare two local JSON files and save added, removed, and changed values in a note."
+		}
+	]
+}

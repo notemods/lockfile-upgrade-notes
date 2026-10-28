@@ -14,7 +14,7 @@ function make(files: Record<string, string> = {}) {
 	vi.spyOn(plugin, 'saveSettings').mockResolvedValue();
 	return { app, plugin };
 }
-function pro(on = true) { bindPro({ isPro: () => on, onChange: () => () => undefined } as never); }
+function pro(on = true) { bindPro({ isPro: () => on, getState: () => ({ status: 'signed-out', lastAttemptAt: 0 }), hasToken: () => false, config: { sponsorLogin: 'theluckystrike' }, onChange: () => () => undefined } as never); }
 afterEach(() => { resetPro(); vi.restoreAllMocks(); });
 
 describe('vault reports', () => {
@@ -125,7 +125,7 @@ describe('settings and Pro facade', () => {
 	it('uses the same sponsor terms as the reference', () => { expect(SPONSORS).toEqual({ clientId: 'Ov23lic5UPGPZqhBlBGg', sponsorLogin: 'theluckystrike', minMonthlyUsd: 5, oneTimeUsd: 15, oneTimeMonths: 0, scope: 'read:user' }); });
 	it('updates listeners and clears them on unload', () => {
 		let state = false; let listener = () => undefined;
-		const unbind = vi.fn(); bindPro({ isPro: () => state, onChange: (fn: () => void) => { listener = fn; return unbind; } } as never);
+		const unbind = vi.fn(); bindPro({ isPro: () => state, getState: () => ({ status: 'signed-out', lastAttemptAt: 0 }), hasToken: () => false, config: { sponsorLogin: 'theluckystrike' }, onChange: (fn: () => void) => { listener = fn; return unbind; } } as never);
 		const change = vi.fn(); const off = onProChange(change); state = true; listener(); expect(isPro()).toBe(true); expect(change).toHaveBeenCalledTimes(1);
 		off(); state = false; listener(); expect(change).toHaveBeenCalledTimes(1); resetPro(); expect(unbind).toHaveBeenCalled(); expect(isPro()).toBe(false);
 	});
@@ -171,7 +171,8 @@ describe('startup cleanup', () => {
 		vi.spyOn(plugin, 'loadSettings').mockImplementation(() => new Promise<void>((resolve) => { finishLoad = resolve; }));
 		const command = vi.spyOn(plugin, 'addCommand').mockImplementation(() => undefined as never);
 		const loading = plugin.onload(); plugin.onunload(); finishLoad(); await loading;
-		expect(command).not.toHaveBeenCalled();
+		// The shared What's new module adds its own commands before the settings load. The plugin command must not follow.
+		expect(command.mock.calls.map(([c]) => (c as { id: string }).id)).not.toContain('compare-lockfiles');
 		expect(plugin.pro).toBeNull();
 	});
 	it('does not start a timer when the layout becomes ready after unload', async () => {

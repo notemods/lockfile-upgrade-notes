@@ -201,6 +201,11 @@ export class SponsorsManager {
 		return sponsorsDecision(this.state, this.hasToken(), this.now()).pro;
 	}
 
+	/** True while a sponsorship check is in flight. */
+	isChecking(): boolean {
+		return this.inflight !== null;
+	}
+
 	getState(): Readonly<SponsorsState> {
 		return this.state;
 	}

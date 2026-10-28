@@ -3,6 +3,7 @@ import { sponsorsSettingItems } from './license/github-obsidian';
 import { parseLock, snapshot } from './compare';
 import { PRO_UI } from './pro';
 import type LockfileUpgradeNotesPlugin from './main';
+import { helloSettingItems } from './hello/settings';
 
 export interface SavedPair { name: string; oldPath: string; newPath: string }
 export interface Baseline { name: string; sourcePath: string; capturedAt: string; text: string }
@@ -39,6 +40,11 @@ export class LockfileUpgradeNotesSettingTab extends PluginSettingTab {
 	plugin: LockfileUpgradeNotesPlugin;
 	constructor(app: ConstructorParameters<typeof PluginSettingTab>[0], plugin: LockfileUpgradeNotesPlugin) { super(app, plugin); this.plugin = plugin; }
 	getSettingDefinitions(): SettingDefinitionItem[] {
+		// The product rows, then the "More from NoteMods" card (packages/hello).
+		return [...this.productSettingDefinitions(), ...helloSettingItems()];
+	}
+
+	productSettingDefinitions(): SettingDefinitionItem[] {
 		return [
 			{ name: 'Report name', desc: 'New reports go in the vault root. A number is added if the name exists.', control: { type: 'text', key: 'reportName', defaultValue: DEFAULT_SETTINGS.reportName } },
 			...(this.plugin.pro ? sponsorsSettingItems(this.plugin.pro, PRO_UI) : []),
