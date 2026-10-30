@@ -295,3 +295,42 @@ export function guardSponsorsPro<A extends unknown[]>(pro: SponsorsManager, acti
 		showProNotice(pro, 'This is a pro feature.');
 	};
 }
+
+/** The elements that can hold the keyboard focus in a settings row. The order is the DOM order. */
+const FOCUS_CONTROLS = 'select, input, textarea, button, a[href], [tabindex]';
+
+/** True for a field where the user types text. Each key in such a field is a new change. */
+function isTextEntry(el: HTMLElement): boolean {
+	if (el.tagName === 'TEXTAREA' || el.isContentEditable) return true;
+	if (el.tagName !== 'INPUT') return false;
+	return ['text', 'search', 'email', 'url', 'tel', 'password', 'number', ''].includes((el as HTMLInputElement).type);
+}
+
+/**
+ * Draws a declarative setting tab again after a refused change (for example a Pro choice of a free user), and keeps the
+ * keyboard focus on the same control. Obsidian does not draw a control row again while the focus is in it. So this
+ * moves the focus out, calls tab.update(), then puts the focus on the control at the same place in the same row.
+ * For a text field the focus stays out (each key would show the notice again), the same as before.
+ */
+export function redrawKeepFocus(tab: { containerEl: HTMLElement; update(): void }): void {
+	const root = tab.containerEl;
+	const active = root.ownerDocument.activeElement as HTMLElement | null;
+	if (!active || active === root || !root.contains(active)) {
+		tab.update();
+		return;
+	}
+	const rows = (): HTMLElement[] => Array.from(root.querySelectorAll<HTMLElement>('.setting-item'));
+	const row = active.closest<HTMLElement>('.setting-item');
+	const rowIndex = row ? rows().indexOf(row) : -1;
+	const name = row?.querySelector('.setting-item-name')?.textContent ?? null;
+	const controlIndex = row ? Array.from(row.querySelectorAll<HTMLElement>(FOCUS_CONTROLS)).indexOf(active) : -1;
+	const keep = rowIndex >= 0 && controlIndex >= 0 && !isTextEntry(active);
+	active.blur();
+	tab.update();
+	if (!keep) return;
+	const now = rows();
+	const same = (r: HTMLElement | undefined): boolean => !!r && (r.querySelector('.setting-item-name')?.textContent ?? null) === name;
+	const target = same(now[rowIndex]) ? now[rowIndex] : now.find(same);
+	const control = target?.querySelectorAll<HTMLElement>(FOCUS_CONTROLS)[controlIndex];
+	control?.focus({ preventScroll: true });
+}

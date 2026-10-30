@@ -57,11 +57,16 @@ export function isWellFormedToken(token: string): boolean {
  * The Sponsors profile URL. With cfg.source it adds metadata_source, which GitHub puts in the metadata column of the
  * transaction export. GitHub accepts only letters, digits, dashes and underscores, at most 100 characters per value,
  * and answers 404 for other characters (docs.github.com/en/sponsors, "Viewing your sponsors and sponsorships").
+ * When a one-time sponsorship unlocks Pro (cfg.oneTimeUsd > 0) it adds frequency=one-time. Without it GitHub opens the
+ * monthly tab, and the one-time tiers stay behind a toggle (checked live 2026-10-30).
  */
 export function sponsorUrl(cfg: SponsorsConfig): string {
 	const base = `https://github.com/sponsors/${cfg.sponsorLogin}`;
 	const source = (cfg.source ?? '').replace(/[^A-Za-z0-9_-]/g, '-').slice(0, 100);
-	return /[A-Za-z0-9]/.test(source) ? `${base}?metadata_source=${source}` : base;
+	const params: string[] = [];
+	if (cfg.oneTimeUsd > 0) params.push('frequency=one-time');
+	if (/[A-Za-z0-9]/.test(source)) params.push(`metadata_source=${source}`);
+	return params.length > 0 ? `${base}?${params.join('&')}` : base;
 }
 
 // ---------- device flow ----------

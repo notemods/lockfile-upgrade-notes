@@ -1,9 +1,9 @@
 {
 	"id": "lockfile-upgrade-notes",
 	"name": "Lockfile Upgrade Notes",
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"changes": [
-		"The Pro buttons, such as Save pair (Pro), now show free users a notice with a Sponsor on GitHub button."
+		"The Sponsor on GitHub button now opens the one-time payment tab of GitHub Sponsors."
 	],
 	"tip": "Look for a downgrade note when a package version decreases between two lockfiles.",
 	"thanks": "Hi, I am Michael, a solo developer in Poland. Lockfile Upgrade Notes is one of over 100 small plugins that I make. Thank you for using it.",

@@ -1,6 +1,6 @@
 {
 	"name": "lockfile-upgrade-notes",
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"private": true,
 	"description": "Compare two npm lockfiles and save a note with package additions, removals, and version changes.",
 	"main": "main.js",
